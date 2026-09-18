@@ -1,0 +1,10 @@
+# Only the mentor can change grading infrastructure.
+# Students write code in the repo root; protected paths below.
+
+/acceptance/                @artromone
+/.github/                   @artromone
+/.golangci.yml              @artromone
+/.acceptance-manifest.sha256 @artromone
+/README.md                   @artromone
+/.githooks/                 @artromone
+/Makefile                   @artromone

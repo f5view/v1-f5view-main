@@ -1,0 +1,31 @@
+#!/bin/sh
+# Прогоняет перед коммитом то же, что и CI. Включается через `make setup`.
+
+fail=0
+
+unformatted=$(gofmt -l .)
+if [ -n "$unformatted" ]; then
+    echo "pre-commit: не отформатировано gofmt:"
+    echo "$unformatted"
+    echo "  исправить: gofmt -w ."
+    fail=1
+fi
+
+if ! go vet ./... ; then
+    echo "pre-commit: go vet нашёл проблемы"
+    fail=1
+fi
+
+if ! go build ./... ; then
+    echo "pre-commit: проект не собирается"
+    fail=1
+fi
+
+if ! sha256sum -c --quiet .acceptance-manifest.sha256 2>/dev/null; then
+    echo "pre-commit: acceptance/ не совпадает с .acceptance-manifest.sha256"
+    echo "  папку acceptance/ менять нельзя. Верни её: git checkout -- acceptance/"
+    echo "  (мейнтейнер: sha256sum acceptance/cli_test.go acceptance/go.mod > .acceptance-manifest.sha256)"
+    fail=1
+fi
+
+exit $fail
