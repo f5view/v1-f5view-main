@@ -83,11 +83,7 @@ func main() {
 	}
 	// сканер, который подключен к стандартному вводу(к консоли)
 	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		// проверка на чтение из консоли
-		if !scanner.Scan() {
-			break
-		}
+	for scanner.Scan() {
 		// записываем в переменную текст который мы ввели
 		line := strings.TrimSpace(scanner.Text())
 
