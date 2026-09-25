@@ -67,19 +67,19 @@ func main() {
 		// Требование: при --storage=json флаг --file обязателен!
 		if *filePath == "" {
 			fmt.Fprintln(os.Stderr, "Error: --file flag is required when using --storage=json")
-			return
+			os.Exit(1)
 		}
 
 		var err error
 		stor, err = storage.NewJSONStorage(*filePath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
-			return
+			os.Exit(1)
 		}
 
 	default:
 		fmt.Fprintf(os.Stderr, "Error: unknown storage type '%s'\n", *storageType)
-		return
+		os.Exit(1)
 	}
 	// сканер, который подключен к стандартному вводу(к консоли)
 	scanner := bufio.NewScanner(os.Stdin)
@@ -105,7 +105,7 @@ func main() {
 				PrintError(err.Error())
 				continue
 			}
-			if err := validator.CheckValiation(title, price, stock); err != nil {
+			if err := validator.CheckValidation(title, price, stock); err != nil {
 				PrintError(err.Error())
 				continue
 			}

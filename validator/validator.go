@@ -14,7 +14,8 @@ var (
 	ErrStock        = errors.New("stock must be non-negative")
 )
 
-func CheckValiation(title string, price float64, stock int) error {
+// исправил опечатку
+func CheckValidation(title string, price float64, stock int) error {
 	if strings.TrimSpace(title) == "" {
 		return ErrEmptyTitle
 	}

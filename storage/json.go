@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 )
 
 // fileData — структура для сериализации в JSON-файл иоже самое что и в памяти только добавляем еще тэги
@@ -70,8 +71,43 @@ func (s *JSONStorage) save() error {
 		return err
 	}
 
-	// Записываем в файл (0644 — стандартные права доступа на чтение/запись)
-	return os.WriteFile(s.filePath, bytes, 0644)
+	// применил паттерн write - rename, создаю временный файл (нужно создавать его в той же директории где и мейн файл), делаю записи в него, потом переименновываю(Это атамарная операция, то есть либо у нас сохранятся данные, либо останутся старые)
+	dir := filepath.Dir(s.filePath)
+	tmpFile, err := os.CreateTemp(dir, "marketplace-*.tmp")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+
+	var success bool
+	defer func() {
+		if !success {
+			_ = tmpFile.Close()
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	if _, err := tmpFile.Write(bytes); err != nil {
+		return err
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return err
+	}
+
+	// 4. КРИТИЧНО ДЛЯ WINDOWS: Закрываем файл перед переименованием
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+
+	// 5. АТОМАРНАЯ ОПЕРАЦИЯ: Мгновенная подмена старого файла новым
+	if err := os.Rename(tmpPath, s.filePath); err != nil {
+		return err
+	}
+
+	// Отмечаем успех, чтобы defer не стал удалять файл
+	success = true
+	return nil
+
 }
 
 // Add добавляет товар и сохраняет в JSON такие же методы как и в памяти не зря у нас интерфейс
@@ -96,7 +132,9 @@ func (s *JSONStorage) Add(title string, price float64, stock int) (Listing, erro
 
 // List просто возвращает текущие элементы
 func (s *JSONStorage) List() ([]Listing, error) {
-	return s.items, nil
+	copiedItems := make([]Listing, len(s.items))
+	copy(copiedItems, s.items) // делаем копию чтобы не могли поменять наши данные из хранилища
+	return copiedItems, nil
 }
 
 // Delete удаляет товар и обновляет файл

@@ -36,7 +36,9 @@ func (m *MemoryStorage) Add(title string, price float64, stock int) (Listing, er
 }
 
 func (m *MemoryStorage) List() ([]Listing, error) {
-	return m.items, nil // просто выводим все наши предметы
+	copiedItems := make([]Listing, len(m.items))
+	copy(copiedItems, m.items) // делаем копию чтобы не могли поменять наши данные из хранилища
+	return copiedItems, nil    // просто выводим все наши предметы
 }
 
 func (m *MemoryStorage) Delete(id int) error {
